@@ -35,16 +35,6 @@ extension UITextView {
 }
 
 extension UITextView {
-    func convertRange(_ range: NSRange) -> UITextRange? {
-        guard let start = self.position(from: self.beginningOfDocument, offset: range.location),
-              let end = self.position(from: start, offset: range.length) else {
-            return nil
-        }
-        return self.textRange(from: start, to: end)
-    }
-}
-
-extension UITextView {
     func setAttributes(_ attributes: [NSAttributedString.Key: Any], forRange range: NSRange) {
         textStorage.addAttributes(attributes, range: range)
     }
@@ -62,26 +52,27 @@ extension UITextView {
 
 extension UITextView {
     func lastTwoCharactersBeforeSelectedRange() -> String? {
-        guard let text = self.text, !text.isEmpty else {
-            return nil
-        }
-        
-        // Get the selected range
+        guard !text.isEmpty else { return nil }
+    
         let selectedRange = self.selectedRange
-        
-        // Calculate the start index for the last two characters
         let startIndex = max(0, selectedRange.location - 2)
-        
-        // Calculate the length for the substring
         let length = min(selectedRange.location, 2)
         
         // Extract the last two characters before the selected range
         let substringRange = NSRange(location: startIndex, length: length)
         
-        guard let substringStartIndex = text.index(text.startIndex, offsetBy: substringRange.location, limitedBy: text.endIndex),
-              let substringEndIndex = text.index(substringStartIndex, offsetBy: substringRange.length, limitedBy: text.endIndex) else {
-            return nil
-        }
+        guard
+            let substringStartIndex = text.index(
+                text.startIndex,
+                offsetBy: substringRange.location,
+                limitedBy: text.endIndex
+            ),
+            let substringEndIndex = text.index(
+                substringStartIndex,
+                offsetBy: substringRange.length,
+                limitedBy: text.endIndex
+            )
+        else { return nil }
         
         let lastTwoCharacters = String(text[substringStartIndex..<substringEndIndex])
         

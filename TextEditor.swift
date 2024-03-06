@@ -11,7 +11,7 @@ import SwiftUI
 
 public class TextEditorModel: NSObject, ObservableObject {
     
-    @Published var active: Bool = false
+    @Published var isParagraphActive: Bool = false
     
     weak var textView: CustomTextView?
     func setNumberedParagraph() {

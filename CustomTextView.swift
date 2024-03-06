@@ -29,12 +29,11 @@ public final class CustomTextView: UITextView {
 
 extension TextEditorModel: UITextViewDelegate {
     public func textViewDidChangeSelection(_ textView: UITextView) {
-        // Get the selected range
         let selectedRange = textView.selectedRange
         
         // Check if there's any text selected
         guard selectedRange.length > 0 else {
-            active = (textView.typingAttributes[.paragraphStyle] as? NSParagraphStyle)?.textLists.isNotEmpty ?? false
+            isParagraphActive = (textView.typingAttributes[.paragraphStyle] as? NSParagraphStyle)?.textLists.isNotEmpty ?? false
             return
         }
         
@@ -43,7 +42,7 @@ extension TextEditorModel: UITextViewDelegate {
         let attributes = attributedText?.attributes(at: selectedRange.location, effectiveRange: nil)
         
         // Check if the attributes contain a paragraph style
-        active = (attributes?[.paragraphStyle] as? NSParagraphStyle)?.textLists.isNotEmpty ?? false
+        isParagraphActive = (attributes?[.paragraphStyle] as? NSParagraphStyle)?.textLists.isNotEmpty ?? false
     }
 
     public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {

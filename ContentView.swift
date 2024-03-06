@@ -14,13 +14,13 @@ struct ContentView: View {
     var body: some View {
         VStack {
             CustomTextEditor(text: $text, model: model)
-            Button("Ordered list: \(model.active.description)") {
+            Button("Ordered list: \(model.isParagraphActive.description)") {
                 showList.toggle()
             }
             .buttonStyle(.bordered)
         }
         .onChange(of: showList) {
-            if model.active {
+            if model.isParagraphActive {
                 model.unsetNumberedParagraph()
             } else {
                 model.setNumberedParagraph()
