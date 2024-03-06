@@ -27,23 +27,6 @@ public final class CustomTextView: UITextView {
     }
 }
 
-extension UITextView {
-    func setAttributes(_ attributes: [NSAttributedString.Key: Any], forRange range: NSRange) {
-        textStorage.addAttributes(attributes, range: range)
-    }
-}
-
-extension UITextView {
-    func removeAttributes(in range: NSRange, forAttribute attribute: NSAttributedString.Key) {
-        guard let attributedText = attributedText else { return }
-        
-        let mutableAttributedText = NSMutableAttributedString(attributedString: attributedText)
-        mutableAttributedText.removeAttribute(attribute, range: range)
-        
-        self.attributedText = mutableAttributedText
-    }
-}
-
 extension TextEditorModel: UITextViewDelegate {
     public func textViewDidChangeSelection(_ textView: UITextView) {
         // Get the selected range
@@ -65,11 +48,38 @@ extension TextEditorModel: UITextViewDelegate {
 
     public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
         
+        // Define if I am inside paragraph
         let paragraph = textView.typingAttributes[.paragraphStyle] as? NSParagraphStyle
         let isInsideNumberedParagraph = !(paragraph?.textLists.isEmpty ?? true)
         
-        // Case 1: Inserting new line after a numbered/bullet point
-        if text == "\n" && isInsideNumberedParagraph {
+        guard isInsideNumberedParagraph else { return true }
+        
+        if text == "\n" && textView.lastTwoCharactersBeforeSelectedRange()?.last == "\n" {
+            let text = textView.text as NSString
+            let rangeToCheck = NSRange(location: range.location, length: 1)
+            // Check if the range is within the bounds of the text
+            if rangeToCheck.location < text.length {
+                let nextChar = text.substring(with: rangeToCheck)
+                if nextChar == "\n" {
+                    textView.removeAttributes(in: rangeToCheck, forAttribute: .paragraphStyle)
+                    textView.textStorage.removeAttribute(.paragraphStyle, range: rangeToCheck)
+                    textView.textStorage.insert(.init(string: "", attributes: [.foregroundColor: UIColor.red]), at: range.location)
+                    
+                    if let ensuringRange = textView.textLayoutManager?.documentRange {
+                        textView.textLayoutManager?.ensureLayout(for: ensuringRange)
+                    }
+                    textView.selectedRange = .init(location: range.location, length: 0)
+                    textView.typingAttributes[.paragraphStyle] = nil
+                    return true
+                }
+            }
+        }
+        
+        guard textView.isTextAfterSelectedRangeEmpty() else { return true }
+        
+        // Case 1: Inserting new line after a numbered/bullet point in order to always render the bullet/number immediately
+        // after new line.
+        if text == "\n" {
             let text = textView.text as NSString
             let nextCharRange = NSRange(location: range.location, length: 1)
             // Check if the range is within the bounds of the text
@@ -88,28 +98,11 @@ extension TextEditorModel: UITextViewDelegate {
                 return true
             }
         }
-        
-        // Case 2: Opting out of using list
-        if text == "\n" && textView.text.hasSuffix("\n\n") && isInsideNumberedParagraph {
-            let text = textView.text as NSString
-            let rangeToCheck = NSRange(location: range.location, length: 1)
-            // Check if the range is within the bounds of the text
-            if rangeToCheck.location < text.length {
-                let nextChar = text.substring(with: rangeToCheck)
-                if nextChar == "\n" {
-                    let rangeToDelete = NSRange(location: range.location - 1, length: 1)
-                    textView.textStorage.replaceCharacters(in: rangeToDelete, with: "")
-                    textView.typingAttributes[.paragraphStyle] = nil
-                    return true
-                }
-            }
-        }
-        
+                
         // Case 3: Deleting character and going back to previous line
         if text == "" {
             let text = textView.text as NSString
             let prevCharRange = NSRange(location: range.location - 1, length: 1)
-            // Check if the range is within the bounds of the text
             if prevCharRange.location >= 0 && prevCharRange.location < text.length {
                 let prevChar = text.substring(with: prevCharRange)
                 if prevChar == "\n" {
