@@ -12,19 +12,32 @@ import SwiftUI
 public class TextEditorModel: NSObject, ObservableObject {
     
     @Published var isParagraphActive: Bool = false
+    @Published var isNestedParagraph: Bool = false
     
     weak var textView: CustomTextView?
     func setNumberedParagraph() {
         let list = NSTextList(markerFormat: .decimal, options: 0)
+        
         let listParagraph = NSMutableParagraphStyle()
         listParagraph.paragraphSpacing = 0
         listParagraph.lineSpacing = 15
         listParagraph.textLists = [list]
         listParagraph.alignment = .left
         
+        
         textView!.typingAttributes[.paragraphStyle] = listParagraph
         
         textView!.setAttributes([.paragraphStyle: listParagraph], forRange: textView!.selectedRange)
+    }
+    
+    func nestParagraph() {
+        let nestedList = NSTextList(markerFormat: .square, options: 0)
+        (textView?.typingAttributes[.paragraphStyle] as? NSMutableParagraphStyle)?.textLists.append(nestedList)
+    }
+    
+    func unnestParagraph() {
+        let paragraph = textView?.typingAttributes[.paragraphStyle] as? NSMutableParagraphStyle
+        paragraph?.textLists.removeAll { !$0.isOrdered }
     }
     
     func unsetNumberedParagraph() {

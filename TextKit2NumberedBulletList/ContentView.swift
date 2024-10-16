@@ -11,19 +11,33 @@ struct ContentView: View {
     @StateObject var model = TextEditorModel()
     @State private var text = NSAttributedString()
     @State var showList = false
+    @State var nestItems = false
     var body: some View {
         VStack {
             CustomTextEditor(text: $text, model: model)
-            Button("Ordered list: \(model.isParagraphActive.description)") {
-                showList.toggle()
+            HStack {
+                Button("Ordered list: \(model.isParagraphActive.description)") {
+                    showList.toggle()
+                }
+                .buttonStyle(.bordered)
+                Button("Nested: \(model.isNestedParagraph.description)") {
+                    nestItems.toggle()
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.bordered)
         }
         .onChange(of: showList) {
             if model.isParagraphActive {
                 model.unsetNumberedParagraph()
             } else {
                 model.setNumberedParagraph()
+            }
+        }
+        .onChange(of: nestItems) {
+            if model.isNestedParagraph {
+                model.unnestParagraph()
+            } else {
+                model.nestParagraph()
             }
         }
         .padding()
