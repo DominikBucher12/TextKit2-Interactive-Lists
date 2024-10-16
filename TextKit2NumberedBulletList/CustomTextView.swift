@@ -34,6 +34,7 @@ extension TextEditorModel: UITextViewDelegate {
         // Check if there's any text selected
         guard selectedRange.length > 0 else {
             isParagraphActive = (textView.typingAttributes[.paragraphStyle] as? NSParagraphStyle)?.textLists.isNotEmpty ?? false
+            isNestedParagraph = (textView.typingAttributes[.paragraphStyle] as? NSParagraphStyle)?.textLists.last?.isOrdered == false
             return
         }
         
@@ -43,6 +44,7 @@ extension TextEditorModel: UITextViewDelegate {
         
         // Check if the attributes contain a paragraph style
         isParagraphActive = (attributes?[.paragraphStyle] as? NSParagraphStyle)?.textLists.isNotEmpty ?? false
+        isNestedParagraph = ((attributes?[.paragraphStyle] as? NSParagraphStyle)?.textLists.last?.isOrdered == false)
     }
 
     public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
